@@ -1,10 +1,11 @@
-#include <cstdio>
+#include <rclcpp/rclcpp.hpp>
 
-int main(int argc, char ** argv)
+int main(int argc, char * argv[])
 {
-  (void) argc;
-  (void) argv;
-
-  printf("hello world cxx_pkg package\n");
-  return 0;
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<rclcpp::Node>(NODE_NAME);
+    RCLCPP_INFO(node->get_logger(), "Node %s: 你好, ROS2!", NODE_NAME);
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return 0;
 }
