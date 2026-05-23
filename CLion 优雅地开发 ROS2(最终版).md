@@ -89,7 +89,7 @@
 
 ## 五、封装通用 CMake 编译工具（统一 C\+\+ 节点规范）
 
-　　在工作空间 `cmake` 目录下新建`add\_cxx\_node\.cmake`，封装复用性极强的 ROS2 C\+\+ 节点编译逻辑，统一节点编译、依赖链接、宏传递、安装部署全流程规范，规避重复配置，适配多节点批量开发。
+　　在工作空间 `cmake` 目录下新建`add_cxx_node.cmake`，封装复用性极强的 ROS2 C\+\+ 节点编译逻辑，统一节点编译、依赖链接、宏传递、安装部署全流程规范，规避重复配置，适配多节点批量开发。
 
 ```bash
 　　mkdir -p cmake
@@ -128,7 +128,7 @@
 
 ## 六、配置 C\+\+ 功能包编译文件
 
-　　完全替换`src/cxx\_pkg/CMakeLists\.txt` 默认生成内容，引入全局自定义 CMake 工具函数。
+　　完全替换`src/cxx_pkg/CMakeLists.txt` 默认生成内容，引入全局自定义 CMake 工具函数。
 
 　　**src/cxx\_pkg/CMakeLists\.txt 内容：**
 
@@ -187,9 +187,9 @@
 　　)
 ```
 
-### 　　7\.2 将包中节点注册为clion的可运行目标
+### 　　7\.2 将包中c++节点注册为clion的可运行目标
 
-　　在 `cmake` 目录创建 `register\_cxx\_pkg\.cmake` 适配脚本，自动遍历、识别、加载 ROS2 Colcon 功能包，解决原生 ROS2 工程无法被 CLion 正常索引、高亮、解析的痛点。
+　　在 `cmake` 目录创建 `register_cxx_pkg.cmake` 适配脚本，自动遍历、识别、加载 ROS2 Colcon 功能包，解决原生 ROS2 工程无法被 CLion 正常索引、高亮、解析的痛点。
 
 　　**cmake/register\_cxx\_pkg\.cmake 内容：**
 
