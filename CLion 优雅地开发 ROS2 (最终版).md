@@ -21,7 +21,7 @@
 
 　　进入工作空间的 `src` 目录，分别创建标准化的 Python、C\+\+ ROS2 功能包，工具会自动生成基础包文件与默认节点模板。
 
-### 　　3\.1 创建 Python 功能包
+　　**创建 Python 功能包**
 
 ```bash
 　　cd src
@@ -34,7 +34,7 @@
 　　  py_pkg
 ```
 
-### 　　3\.2 创建 C\+\+ 功能包
+　　**创建 C\+\+ 功能包**
 
 ```bash
 　　ros2 pkg create --build-type ament_cmake \
@@ -50,7 +50,7 @@
 
 ## 四、编写自定义节点业务代码
 
-### 　　4\.1 Python 节点（py\_pkg/py\_pkg/py\_node\.py）
+　　**Python 节点（py\_pkg/py\_pkg/py\_node\.py）**
 
 ```python
 　　import rclpy
@@ -72,7 +72,7 @@
 　　    main()
 ```
 
-### 　　4\.2 C\+\+ 节点（src/cxx\_pkg/src/cxx\_node\.cpp）
+　　**C\+\+ 节点（src/cxx\_pkg/src/cxx\_node\.cpp）**
 
 ```cpp
 　　#include <rclcpp/rclcpp.hpp>
@@ -89,7 +89,7 @@
 
 ## 五、封装通用 CMake 编译工具（统一 C\+\+ 节点规范）
 
-　　在工作空间 `cmake` 目录下新建`add_cxx_node.cmake`，封装复用性极强的 ROS2 C\+\+ 节点编译逻辑，统一节点编译、依赖链接、宏传递、安装部署全流程规范，规避重复配置，适配多节点批量开发。
+　　在工作空间 `cmake` 目录下新建`add\_cxx\_node\.cmake`，封装复用性极强的 ROS2 C\+\+ 节点编译逻辑，统一节点编译、依赖链接、宏传递、安装部署全流程规范，规避重复配置，适配多节点批量开发。
 
 ```bash
 　　mkdir -p cmake
@@ -128,7 +128,7 @@
 
 ## 六、配置 C\+\+ 功能包编译文件
 
-　　完全替换`src/cxx_pkg/CMakeLists.txt` 默认生成内容，引入全局自定义 CMake 工具函数。
+　　完全替换`src/cxx\_pkg/CMakeLists\.txt` 默认生成内容，引入全局自定义 CMake 工具函数。
 
 　　**src/cxx\_pkg/CMakeLists\.txt 内容：**
 
@@ -171,7 +171,7 @@
 
 ## 七、CLion 工程适配配置（核心优化）
 
-### 　　7\.1 工作空间根目录下创建 CMakeLists\.txt
+　　**工作空间根目录下创建 CMakeLists\.txt**
 
 　　**Elegant\_ROS2/CMakeLists\.txt 内容：**
 
@@ -187,9 +187,9 @@
 　　)
 ```
 
-### 　　7\.2 将包中c++节点注册为clion的可运行目标
+　　**将包中c\+\+节点注册为clion的可运行目标**
 
-　　在 `cmake` 目录创建 `register_cxx_pkg.cmake` 适配脚本，自动遍历、识别、加载 ROS2 Colcon 功能包，解决原生 ROS2 工程无法被 CLion 正常索引、高亮、解析的痛点。
+　　在 `cmake` 目录创建 `register\_cxx\_pkg\.cmake` 适配脚本，自动遍历、识别、加载 ROS2 Colcon 功能包，解决原生 ROS2 工程无法被 CLion 正常索引、高亮、解析的痛点。
 
 　　**cmake/register\_cxx\_pkg\.cmake 内容：**
 
@@ -262,7 +262,7 @@
 
 　　本节配置 CLion 外部编译工具，适配 ROS2 一键编译，采用 **Clang \+ LLD** 高效编译链，替代原生编译方式，提升编译速度与代码规范校验效果。
 
-### 　　9\.1 External Tool 核心配置参数
+　　**External Tool 核心配置参数**
 
 　　打开 CLion 设置：`File \-\&gt; Settings \-\&gt; Tools \-\&gt; External Tools`，新建自定义工具，填写以下参数：
 
@@ -276,37 +276,27 @@
 
 　　\- **Working directory**：`$ProjectFileDir$`
 
-### 　　9\.2 顶层 CMake 配置说明
+　　该参数启动 Bash 解释器执行一条复合命令：首先通过 source 加载 ROS 2 Jazzy 的运行时环境配置（/opt/ros/jazzy/setup\.bash），而后调用 colcon build 构建 src 目录下的软件包。构建选项 \-\-symlink\-install 采用符号链接方式完成安装，避免冗余复制；\-\-cmake\-args 传递以下 CMake 参数：启用 Ninja 生成器（\-G Ninja），指定 C 编译器为 Clang），C\+\+ 编译器为 Clang\+\+，并设置链接器为 LLD 18。该配置旨在利用 Clang/LLD 工具链与 Ninja 构建系统提升编译链接效率。
 
-　　此前配置的顶层`CMakeLists\.txt`（包含 `colcon\_add\_subdirectories` 逻辑）**无需修改、无需删除**。当前 `colcon build` 仅扫描工作空间 `src`目录，不会与顶层 CMake 配置冲突，完美兼容 CLion 代码索引、语法高亮和工程解析功能。
+　　**顶层 CMake 配置说明**
 
-### 　　9\.3 快捷键绑定配置
+　　当前 `colcon build` 仅扫描工作空间 `src`目录，不会与顶层 CMake 配置冲突，完美兼容 CLion 代码索引、语法高亮和工程解析功能。
 
-　　为自定义编译工具绑定快捷键，实现一键编译工程：
+　　**快捷键绑定配置**
 
-　　CLion 设置：`File \-\&gt; Settings \-\&gt; Keymap`，搜索刚刚创建的 External Tool，绑定自定义快捷键（推荐 **Ctrl\+Shift\+B**）。
+　　为自定义编译工具绑定快捷键，实现一键编译工程：CLion 设置：`File \-\&gt; Settings \-\&gt; Keymap`，搜索刚刚创建的 External Tool，绑定自定义快捷键（推荐 **Ctrl\+Shift\+B**）。
 
-### 　　9\.4 最终效果
+　　**最终效果**
 
-　　配置完成后，当前 ROS2 工作空间可实现：
-
-　　\- 一键快捷键编译整个工程
-
-　　\- 基于 Clang \+ LLD 极速编译、严格语法检查
-
-　　\- 完美兼容 CLion 代码提示、索引、跳转、调试
-
-　　\- 正常运行 C\+\+、Python 两类 ROS2 节点
+　　配置完成后，当前 ROS2 工作空间可实现：一键快捷键编译整个工程、基于 Clang \+ LLD 极速编译与严格语法检查、完美兼容 CLion 代码提示、索引、跳转、调试、正常运行 C\+\+、Python 两类 ROS2 节点。
 
 ## 十、Python 节点 CLion 精准调试配置（等价 ros2 run \+ 断点调试）
 
 　　本章介绍python节点调试配置，通过 **Python运行配置 \+ 相对路径 \+ \.env环境变量文件**，让 CLion 调试效果完全等价终端 `ros2 run` 命令，完整保留 ROS2 运行环境，支持正常断点、单步调试、变量查看，解决原生调试环境缺失、节点无法通信、断点不生效等问题。
 
-### 　　10\.1 环境准备：生成 \.env 环境变量文件
+　　**环境准备：生成 \.env 环境变量文件**
 
-　　该步骤可导出当前 ROS2 完整运行环境变量，让 CLion 调试环境和终端运行环境完全一致，规避环境变量缺失导致的各类报错。
-
-　　打开终端，进入工作空间根目录（示例路径：`/home/lzw/Projects/clion/Elegant\_ROS2`），依次执行以下命令加载环境并导出配置：
+　　该步骤可导出当前 ROS2 完整运行环境变量，让 CLion 调试环境和终端运行环境完全一致，规避环境变量缺失导致的各类报错。打开终端，进入工作空间根目录，依次执行以下命令加载环境并导出配置：
 
 ```bash
 　　source /opt/ros/jazzy/setup.bash
@@ -316,43 +306,23 @@
 
 　　执行完成后，工作空间根目录会生成 `\.env` 隐藏文件，包含 ROS2 运行、依赖查找、模块加载所需的全部核心环境变量。
 
-### 　　10\.2 CLion Python 运行调试配置（相对路径方案）
+　　**CLion Python 运行调试配置（相对路径方案）**
 
-　　打开 CLion 运行配置面板：右上角运行配置下拉菜单 → `Edit Configurations` → 点击左上角 `\+` → 选择 `Python`，新建自定义调试配置，具体参数配置如下：
+　　打开 CLion 运行配置面板：右上角运行配置下拉菜单 → `Edit Configurations` → 点击左上角 `\+` → 选择 `Python`，新建自定义调试配置。名称自定义为：`py\_node`，方便区分原生运行配置。
 
-#### 　　　　10\.2\.1 基础名称配置
+　　**脚本路径配置（核心）**
 
-　　　　名称自定义为：`py\_node`，方便区分原生运行配置。
+　　Script path 填写工作空间相对路径：`install/py\_pkg/lib/py\_pkg/py\_node`，该路径为 `colcon build` 编译后生成的原生可执行 Python 节点，无 `\.py` 后缀，和 `ros2 run` 实际执行的文件完全一致。CLion 会基于工作目录自动解析相对路径，若出现路径红色报错、提示文件不存在，可先通过文件夹图标选择绝对路径，再手动修改为相对路径，不影响最终运行调试效果；也可直接填写绝对路径，适配性略差于相对路径。
 
-#### 　　　　10\.2\.2 脚本路径配置（核心）
+　　**解释器与工作目录配置**
 
-　　　　**Script path** 填写工作空间相对路径：
+　　Python interpreter 保持系统默认 Python3 即可，无需额外修改。Working directory 填写工作空间根目录，推荐使用通用宏 `$ProjectFileDir$`，也可填写本地绝对路径。
 
-```text
-　　　　install/py_pkg/lib/py_pkg/py_node
-```
+　　**加载环境变量文件（关键步骤）**
 
-　　　　该路径为 `colcon build` 编译后生成的原生可执行 Python 节点，无 `\.py` 后缀，和 `ros2 run` 实际执行的文件完全一致。
+　　点击 Path to \&\#34;\.env\&\#34; files 右侧文件夹图标 → 选择 `Load from file` → 选中第一步生成的根目录 `\.env` 文件。该步骤为调试核心，若不加载 `\.env` 文件，CLion 调试环境缺失 ROS2 核心变量，会导致节点无法启动、无法通信、依赖加载失败等问题。其余配置项保持默认即可，点击`OK` 保存配置。
 
-　　　　**路径识别说明**：CLion 会基于工作目录自动解析相对路径，若出现路径红色报错、提示文件不存在，可先通过文件夹图标选择绝对路径，再手动修改为相对路径，不影响最终运行调试效果；也可直接填写绝对路径，适配性略差于相对路径。
-
-#### 　　　　10\.2\.3 解释器与工作目录配置
-
-　　　　\- **Python interpreter**：保持系统默认 Python3 即可，无需额外修改。
-
-　　　　\- **Working directory**：填写工作空间根目录，推荐使用通用宏，适配所有设备：`$ProjectFileDir$`
-
-　　　　也可填写本地绝对路径：`/home/lzw/Projects/clion/Elegant\_ROS2`
-
-#### 　　　　10\.2\.4 加载环境变量文件（关键步骤）
-
-　　　　点击 Path to \&\#34;\.env\&\#34; files 右侧文件夹图标 → 选择 `Load from file` → 选中第一步生成的根目录 `\.env` 文件。
-
-　　　　该步骤为调试核心，若不加载 `\.env` 文件，CLion 调试环境缺失 ROS2 核心变量，会导致节点无法启动、无法通信、依赖加载失败等问题。
-
-　　　　其余配置项保持默认即可，点击`OK` 保存配置。
-
-### 　　10\.3 断点调试验证与使用方法
+　　**断点调试验证与使用方法**
 
 　　1\. 打开 `py\_node\.py` 源码，在 `main` 函数、节点初始化、日志输出等位置添加断点；
 
@@ -362,14 +332,10 @@
 
 　　4\. 程序启动后会自动命中断点，支持单步执行、步入跳出、实时查看变量、查看日志输出。
 
-### 　　10\.4 配置优势
+　　**配置优势**
 
-　　\- **环境完全等价**：调试环境与终端`ros2 run` 运行环境完全一致，杜绝环境不一致导致的隐性BUG；
+　　环境完全等价：调试环境与终端`ros2 run` 运行环境完全一致，杜绝环境不一致导致的隐性BUG；原生断点支持：完美适配 CLion 全套调试功能，断点精准生效，调试体验优于终端打印日志调试；通用性强：采用相对路径\+环境变量文件，迁移项目、更换设备后可快速复用配置；不破坏原有工程：仅新增调试配置，不修改原有编译、工程配置文件。
 
-　　\- **原生断点支持**：完美适配 CLion 全套调试功能，断点精准生效，调试体验优于终端打印日志调试；
-
-　　\- **通用性强**：采用相对路径\+环境变量文件，迁移项目、更换设备后可快速复用配置；
-
-　　\- **不破坏原有工程**：仅新增调试配置，不修改原有编译、工程配置文件。
+　　*注：文档部分内容可能由 AI 生成*
 
 > （注：文档部分内容可能由 AI 生成）
