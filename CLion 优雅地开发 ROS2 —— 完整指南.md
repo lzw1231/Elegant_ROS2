@@ -140,9 +140,9 @@ endfunction()
 
 ## 六、配置 C\+\+ 功能包编译文件
 
-完全替换`src/cxx\_pkg/CMakeLists\.txt` 默认生成内容，引入全局自定义 CMake 工具函数。
+完全替换`src/cxx_pkg/CMakeLists.txt` 默认生成内容，引入全局自定义 CMake 工具函数。
 
-**src/cxx\_pkg/CMakeLists\.txt 内容：**
+**src/cxx_pkg/CMakeLists.txt 内容：**
 
 ```cmake
 # ============================================================================
@@ -203,10 +203,10 @@ ament_package()
 cmake_minimum_required(VERSION 4.2)
 project("Elegant_ROS2")
 
-include("cmake/colcon.cmake")
+include("cmake/register_cxx_pkg.cmake")
 
 # only for clion highlighting and analysis
-colcon_add_subdirectories(
+register_cxx_pkg(
         BUILD_BASE "${PROJECT_SOURCE_DIR}/build"
         BASE_PATHS "${PROJECT_SOURCE_DIR}/src/"
         # --packages-select
@@ -215,44 +215,44 @@ colcon_add_subdirectories(
 
 ### 7\.2 Colcon 工程识别适配脚本
 
-在 `cmake` 目录创建 `colcon\.cmake` 适配脚本，自动遍历、识别、加载 ROS2 Colcon 功能包，解决原生 ROS2 工程无法被 CLion 正常索引、高亮、解析的痛点。
+在 `cmake` 目录创建 `register_cxx_pkg.cmake` 适配脚本，自动遍历、识别、加载 ROS2 Colcon 功能包，解决原生 ROS2 工程无法被 CLion 正常索引、高亮、解析的痛点。
 
-**cmake/colcon\.cmake 内容：**
+**cmake/register_cxx_pkg\.cmake 内容：**
 
 ```cmake
-function(colcon_add_subdirectories)
-  cmake_parse_arguments(PARSE_ARGV 0 "ARG" "" "BUILD_BASE;BASE_PATHS" "")
+function(register_cxx_pkg)
+    cmake_parse_arguments(PARSE_ARGV 0 "ARG" "" "BUILD_BASE;BASE_PATHS" "")
 
-  message("search criteria: ${ARGV}")
+    message("search criteria: ${ARGV}")
 
-  execute_process(COMMAND colcon list
-		--paths-only
-		--base-paths ${ARG_BASE_PATHS}
-		--topological-order
-		${ARG_UNPARSED_ARGUMENTS}
-		OUTPUT_VARIABLE paths)
-  string(STRIP "${paths}" paths)
-  string(REPLACE "\n" ";" paths "${paths}")
+    execute_process(COMMAND colcon list
+            --paths-only
+            --base-paths ${ARG_BASE_PATHS}
+            --topological-order
+            ${ARG_UNPARSED_ARGUMENTS}
+            OUTPUT_VARIABLE paths)
+    string(STRIP "${paths}" paths)
+    string(REPLACE "\n" ";" paths "${paths}")
 
-  MESSAGE("colcon shows paths ${paths}")
+    MESSAGE("colcon shows paths ${paths}")
 
-  foreach(path IN LISTS paths)
-    message("...examining ${path}")
-    execute_process(COMMAND colcon info --paths "${path}" OUTPUT_VARIABLE package_info)
-    if(NOT "${package_info}" MATCHES "type:[ \t]+(cmake|ros.ament_cmake|ros.cmake)")
-      message("skipping non-cmake project")
-    elseif(NOT "${package_info}" MATCHES "name:[ \t]+([^ \r\n\t]*)")
-      message(WARNING "could not identify package at ${path}")
-    else()
-      set(name "${CMAKE_MATCH_1}")
-      message("...adding package ${name} from path ${path}")
-      MESSAGE("package info: ${package_info}")
+    foreach (path IN LISTS paths)
+        message("...examining ${path}")
+        execute_process(COMMAND colcon info --paths "${path}" OUTPUT_VARIABLE package_info)
+        if (NOT "${package_info}" MATCHES "type:[ \t]+(cmake|ros.ament_cmake|ros.cmake)")
+            message("skipping non-cmake project")
+        elseif (NOT "${package_info}" MATCHES "name:[ \t]+([^ \r\n\t]*)")
+            message(WARNING "could not identify package at ${path}")
+        else ()
+            set(name "${CMAKE_MATCH_1}")
+            message("...adding package ${name} from path ${path}")
+            MESSAGE("package info: ${package_info}")
 
-      get_filename_component(BUILD_PATH "${name}" ABSOLUTE BASE_DIR "${ARG_BUILD_BASE}")
+            get_filename_component(BUILD_PATH "${name}" ABSOLUTE BASE_DIR "${ARG_BUILD_BASE}")
 
-      add_subdirectory("${path}" "${BUILD_PATH}")
-    endif()
-  endforeach()
+            add_subdirectory("${path}" "${BUILD_PATH}")
+        endif ()
+    endforeach ()
 endfunction()
 ```
 
@@ -262,17 +262,16 @@ endfunction()
 Elegant_ROS2/
 ├── cmake/
 │   ├── add_cxx_node.cmake
-│   └── colcon.cmake
+│   ├── add_py_node.cmake
+│   └── register_cxx_pkg.cmake
 ├── src/
 │   ├── cxx_pkg/
-│   │   ├── include/
-│   │   │   └── cxx_pkg/
 │   │   ├── src/
 │   │   │   └── cxx_node.cpp
 │   │   ├── CMakeLists.txt
 │   │   ├── LICENSE
 │   │   └── package.xml
-│   └── py_pkg/
+│   ├── py_pkg/
 │       ├── py_pkg/
 │       │   ├── __init__.py
 │       │   └── py_node.py
@@ -286,7 +285,9 @@ Elegant_ROS2/
 │       ├── package.xml
 │       ├── setup.cfg
 │       └── setup.py
+├── CLion 优雅地开发 ROS2 —— 完整指南.md
 └── CMakeLists.txt
+
 ```
 
 ## 九、CLion External Tool 编译工具与快捷键配置
