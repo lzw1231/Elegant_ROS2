@@ -10,7 +10,7 @@ def main(args=None):
     rclpy.init(args=args)
     node = MyNode()
     
-    node.get_logger().info('py_node: 你好, ROS2!')
+    node.get_logger().info('py_node: -> === 你好, ROS2!')
     
     rclpy.spin(node)
     node.destroy_node()

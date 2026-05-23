@@ -289,4 +289,44 @@ Elegant_ROS2/
 └── CMakeLists.txt
 ```
 
+## 九、CLion External Tool 编译工具与快捷键配置
+
+本节配置 CLion 外部编译工具，适配 ROS2 一键编译，采用 **Clang \+ LLD** 高效编译链，替代原生编译方式，提升编译速度与代码规范校验效果。
+
+### 9\.1 External Tool 核心配置参数
+
+打开 CLion 设置：`File \-\&gt; Settings \-\&gt; Tools \-\&gt; External Tools`，新建自定义工具，填写以下参数：
+
+- **Program**：`/bin/bash`
+
+- **Arguments**：
+
+```text
+-c "source /opt/ros/jazzy/setup.bash && colcon build --base-paths src --symlink-install --cmake-args -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_LINKER=/usr/bin/ld.lld-18"
+```
+
+- **Working directory**：`$ProjectFileDir$`
+
+### 9\.2 顶层 CMake 配置说明
+
+此前配置的顶层`CMakeLists\.txt`（包含 `colcon\_add\_subdirectories` 逻辑）**无需修改、无需删除**。当前 `colcon build` 仅扫描工作空间 `src` 目录，不会与顶层 CMake 配置冲突，完美兼容 CLion 代码索引、语法高亮和工程解析功能。
+
+### 9\.3 快捷键绑定配置
+
+为自定义编译工具绑定快捷键，实现一键编译工程：
+
+CLion 设置：`File \-\&gt; Settings \-\&gt; Keymap`，搜索刚刚创建的 External Tool，绑定自定义快捷键（推荐 **Ctrl\+Shift\+B**）。
+
+### 9\.4 最终效果
+
+配置完成后，当前 ROS2 工作空间可实现：
+
+- 一键快捷键编译整个工程
+
+- 基于 Clang \+ LLD 极速编译、严格语法检查
+
+- 完美兼容 CLion 代码提示、索引、跳转、调试
+
+- 正常运行 C\+\+、Python 两类 ROS2 节点
+
 > （注：文档部分内容可能由 AI 生成）
