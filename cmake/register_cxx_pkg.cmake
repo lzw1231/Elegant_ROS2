@@ -1,3 +1,5 @@
+# 功能：遍历 BASE_PATHS 下的所有 ROS2 包，对有 ament_cmake 类型的包执行 add_subdirectory
+# 用法：register_cxx_pkg(BUILD_BASE <构建输出目录> BASE_PATHS <源码目录>)
 function(register_cxx_pkg)
     cmake_parse_arguments(PARSE_ARGV 0 "ARG" "" "BUILD_BASE;BASE_PATHS" "")
 
