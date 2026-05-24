@@ -307,9 +307,15 @@ env | grep -E "ROS|PYTHONPATH|LD_LIBRARY_PATH|PATH|AMENT" > .env
 
 1\. 新建Python运行配置，命名为 `py_node`。
 
-2\. **Script path**：填写编译后节点路径：`install/py_pkg/lib/py_pkg/py_node`
+2\. **Script path**：填写编译后节点路径：
+```text
+install/py_pkg/lib/py_pkg/py_node
+```
 
-3\. **Working directory**：设置为工程根目录：`$ProjectFileDir$`
+3\. **Working directory**：设置为工程根目录：
+```text
+$ProjectFileDir$
+```
 
 4\. **Environment variables**：添加如下参数：
 ```text
