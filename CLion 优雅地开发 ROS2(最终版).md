@@ -267,7 +267,7 @@ Elegant_ROS2/
 
 　　**External Tool 核心配置参数**
 
-　　打开 CLion 设置：`File \-\&gt; Settings \-\&gt; Tools \-\&gt; External Tools`，新建自定义工具，填写以下参数：
+　　打开 CLion 设置：`File -> Settings \-\&gt; Tools \-\&gt; External Tools`，新建自定义工具，填写以下参数：
 
 　　\- **Program**：`/bin/bash`
 
