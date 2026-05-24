@@ -90,86 +90,129 @@ int main(int argc, char * argv[])
 }
 ```
 
-## 五、封装通用 CMake 编译工具（统一 C\+\+ 节点规范）
+## 五、cmake/ros2_cxx_setup.cmake，封装通用 CMake 编译工具
 
-　　在工作空间 `cmake` 目录下新建`add\_cxx\_node\.cmake`，封装复用性极强的 ROS2 C\+\+ 节点编译逻辑，统一节点编译、依赖链接、宏传递、安装部署全流程规范，规避重复配置，适配多节点批量开发。
+　　在工作空间 `cmake` 目录下新建`ros2_cxx_setup.cmake`，封装复用性极强的 ROS2 C\+\+ 节点编译逻辑，统一节点编译、依赖链接、宏传递、安装部署全流程规范，规避重复配置，适配多节点批量开发。
 
 ```bash
 mkdir -p cmake
 ```
 
-　　**cmake/add\_cxx\_node\.cmake 文件内容：**
+　　**cmake/ros2\_cxx\_setup\.cmake 文件内容：**
 
 ```cmake
-# 函数：add_cxx_node
-# 用法：add_cxx_node(<节点名> [DEPENDS 包1 包2 ...])
-# 说明：
-#   - 源文件固定为 src/<节点名>.cpp
-#   - 默认依赖 rclcpp，可通过 DEPENDS 添加额外依赖
-#   - 自动传递 NODE_NAME 宏给源代码
-function(add_cxx_node NODE_NAME)
-  cmake_parse_arguments(NODE "" "" "DEPENDS" ${ARGN})
-  set(SOURCE_FILE src/${NODE_NAME}.cpp)
-  add_executable(${NODE_NAME} ${SOURCE_FILE})
-  target_compile_definitions(${NODE_NAME} PRIVATE NODE_NAME="${NODE_NAME}")
-  target_include_directories(${NODE_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
-  )
-  target_compile_features(${NODE_NAME} PUBLIC
-    c_std_${CMAKE_C_STANDARD}
-    cxx_std_${CMAKE_CXX_STANDARD}
-  )
-  set(ALL_DEPENDS rclcpp)
-  if(NODE_DEPENDS)
-    list(APPEND ALL_DEPENDS ${NODE_DEPENDS})
-  endif()
-  ament_target_dependencies(${NODE_NAME} ${ALL_DEPENDS})
-  install(TARGETS ${NODE_NAME} DESTINATION lib/${PROJECT_NAME})
+# ============================================================================
+# ros2_cxx_setup.cmake
+# 为 ROS2 C++ 包提供：
+#   - 设置 C23 / C++26 标准和编译器警告
+#   - 查找 ament_cmake
+#   - 配置测试时的 lint 依赖
+#   - 定义 add_cxx_node() 函数（自动创建节点可执行文件并链接依赖）
+# ============================================================================
+
+# 防止重复包含，并输出提示信息
+if (__ADD_CXX_NODE_INCLUDED)
+    message(STATUS "[ros2_cxx_setup.cmake] 已经包含过，跳过重复包含")
+    return()
+endif ()
+set(__ADD_CXX_NODE_INCLUDED TRUE)
+
+# ----------------------------------------------------------------------------
+# 1. 全局编译设置（C/C++ 标准、警告选项）
+# ----------------------------------------------------------------------------
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif ()
+
+# ----------------------------------------------------------------------------
+# 2. ROS2 核心依赖（必须，提供 ament 宏和函数）
+# ----------------------------------------------------------------------------
+find_package(ament_cmake REQUIRED)
+
+# ----------------------------------------------------------------------------
+# 3. 测试配置（仅在测试启用时）
+# ----------------------------------------------------------------------------
+if (BUILD_TESTING)
+    find_package(ament_lint_auto REQUIRED)
+    set(ament_cmake_copyright_FOUND TRUE)
+    set(ament_cmake_cpplint_FOUND TRUE)
+    ament_lint_auto_find_test_dependencies()
+endif ()
+
+# ----------------------------------------------------------------------------
+# 4. 定义函数 ros2_cxx_setup
+# 用法：ros2_cxx_setup(<节点名> DEPENDS 依赖1 依赖2 ...)
+# 说明：用户必须在调用前通过 find_package 引入所有 DEPENDS 中列出的包
+# ----------------------------------------------------------------------------
+function(ros2_cxx_setup NODE_NAME)
+    cmake_parse_arguments(NODE "" "" "DEPENDS" ${ARGN})
+
+    set(SOURCE_FILE src/${NODE_NAME}.cpp)
+    add_executable(${NODE_NAME} ${SOURCE_FILE})
+
+    target_compile_definitions(${NODE_NAME} PRIVATE NODE_NAME="${NODE_NAME}")
+
+    target_include_directories(${NODE_NAME} PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+    )
+
+    target_compile_features(${NODE_NAME} PUBLIC
+            c_std_${CMAKE_C_STANDARD}
+            cxx_std_${CMAKE_CXX_STANDARD}
+    )
+
+    # 链接依赖（前提：依赖包已通过 find_package 查找）
+    if (NODE_DEPENDS)
+        ament_target_dependencies(${NODE_NAME} ${NODE_DEPENDS})
+    endif ()
+
+    install(TARGETS ${NODE_NAME} DESTINATION lib/${PROJECT_NAME})
 endfunction()
 ```
 
 ## 六、配置 C\+\+ 功能包编译文件
 
-　　完全替换`src/cxx\_pkg/CMakeLists\.txt` 默认生成内容，引入全局自定义 CMake 工具函数。
+　　完全替换`src/cxx_pkg/CMakeLists.txt` 默认生成内容，引入全局自定义 CMake 工具函数。
 
 　　**src/cxx\_pkg/CMakeLists\.txt 内容：**
 
 ```cmake
 # ============================================================================
-# 固定配置（通常无需修改）
+# CMakeLists.txt
+# ROS2 C++ 包主文件，显式声明所需依赖
 # ============================================================================
+
+# cmake 所需最小版本
 cmake_minimum_required(VERSION 4.2)
+
+# 包名
 project(cxx_pkg)
-set(CMAKE_C_STANDARD 23)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_STANDARD 26)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
+
+# 默认关闭测试
+option(BUILD_TESTING "Build tests" OFF)
+
+# 添加自定义 CMake 模块路径（确保能找到 ros2_cxx_setup.cmake）
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
-include(add_cxx_node)
-# ============================================================================
-# 手动配置区域（额外依赖、节点添加）
-# ============================================================================
-# find_package(example_interfaces REQUIRED)
-# find_package(std_msgs REQUIRED)
-add_cxx_node(cxx_node)
-# add_cxx_node(demo_node)
-# add_cxx_node(demo_node DEPENDS example_interfaces std_msgs)
-# ============================================================================
-# 测试与打包（通常无需修改）
-# ============================================================================
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  set(ament_cmake_copyright_FOUND TRUE)
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
+
+# 引入通用配置（C++ 标准、警告选项、ament_cmake、测试配置等）
+include(ros2_cxx_setup)
+
+# 显式查找项目依赖（清晰可见）
+find_package(rclcpp REQUIRED)          # ROS2 C++ 客户端库
+# find_package(std_msgs REQUIRED)      # 如有需要可继续添加
+
+# 创建节点：显式声明 DEPENDS rclcpp .....
+ros2_cxx_setup(cxx_node DEPENDS rclcpp)
+
+# 生成 ROS2 包描述文件
 ament_package()
+
 ```
 
 ## 七、CLion 工程适配配置（核心优化）
@@ -179,11 +222,19 @@ ament_package()
 　　**Elegant\_ROS2/CMakeLists\.txt 内容：**
 
 ```cmake
+# 设置 CMake 最低版本要求
 cmake_minimum_required(VERSION 4.2)
+
+# 定义项目名称（Elegant_ROS2）
 project("Elegant_ROS2")
-# include注册脚本
+
+# 引入自定义 CMake 脚本 register_cxx_pkg.cmake
+# 该脚本用于注册所有 C++ 类型的 ROS2 包，便于 CLion 索引和统一构建
 include(cmake/register_cxx_pkg.cmake)
-# 注册所有 C++ 包（以便 CLion 索引）
+
+# 注册所有 C++ 类型的 ROS 2 包
+#   - BUILD_BASE：指定构建输出目录
+#   - BASE_PATHS：指定源码目录，用于查找 ROS 2 包
 register_cxx_pkg(
         BUILD_BASE "${PROJECT_SOURCE_DIR}/build"
         BASE_PATHS "${PROJECT_SOURCE_DIR}/src/"
@@ -234,8 +285,8 @@ endfunction()
 ```text
 Elegant_ROS2/
 ├── cmake/
-│   ├── add_cxx_node.cmake
-│   └── register_cxx_pkg.cmake
+│   ├── register_cxx_pkg.cmake
+│   └── ros2_cxx_setup.cmake
 ├── src/
 │   ├── cxx_pkg/
 │   │   ├── src/
@@ -257,8 +308,9 @@ Elegant_ROS2/
 │       ├── package.xml
 │       ├── setup.cfg
 │       └── setup.py
-├── CLion 优雅地开发 ROS2 —— 完整指南.md
+├── CLion 优雅地开发 ROS2(最终版).md
 └── CMakeLists.txt
+
 ```
 
 ## 九、CLion External Tool 编译工具与快捷键配置

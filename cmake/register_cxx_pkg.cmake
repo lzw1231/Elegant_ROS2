@@ -1,10 +1,6 @@
-# 功能：遍历 BASE_PATHS 下的所有 ROS2 包，对有 ament_cmake 类型的包执行 add_subdirectory
-# 用法：register_cxx_pkg(BUILD_BASE <构建输出目录> BASE_PATHS <源码目录>)
 function(register_cxx_pkg)
     cmake_parse_arguments(PARSE_ARGV 0 "ARG" "" "BUILD_BASE;BASE_PATHS" "")
-
     message("search criteria: ${ARGV}")
-
     execute_process(COMMAND colcon list
             --paths-only
             --base-paths ${ARG_BASE_PATHS}
@@ -13,9 +9,7 @@ function(register_cxx_pkg)
             OUTPUT_VARIABLE paths)
     string(STRIP "${paths}" paths)
     string(REPLACE "\n" ";" paths "${paths}")
-
     MESSAGE("colcon shows paths ${paths}")
-
     foreach (path IN LISTS paths)
         message("...examining ${path}")
         execute_process(COMMAND colcon info --paths "${path}" OUTPUT_VARIABLE package_info)
@@ -27,9 +21,7 @@ function(register_cxx_pkg)
             set(name "${CMAKE_MATCH_1}")
             message("...adding package ${name} from path ${path}")
             MESSAGE("package info: ${package_info}")
-
             get_filename_component(BUILD_PATH "${name}" ABSOLUTE BASE_DIR "${ARG_BUILD_BASE}")
-
             add_subdirectory("${path}" "${BUILD_PATH}")
         endif ()
     endforeach ()
