@@ -267,7 +267,7 @@ Elegant_ROS2/
 
 　　**External Tool 核心配置参数**
 
-　　打开 CLion 设置：`File -> Settings \-\&gt; Tools \-\&gt; External Tools`，新建自定义工具，填写以下参数：
+　　打开 CLion 设置：`File -> Settings -> Tools -> External Tools`，新建自定义工具，填写以下参数：
 
 　　\- **Program**：`/bin/bash`
 
@@ -315,7 +315,7 @@ env | grep -E "ROS|PYTHONPATH|LD_LIBRARY_PATH|PATH|AMENT" > .env
 
 　　**脚本路径配置（核心）**
 
-　　Script path 填写工作空间相对路径：`install/py\_pkg/lib/py\_pkg/py\_node`，该路径为 `colcon build` 编译后生成的原生可执行 Python 节点，无 `\.py` 后缀，和 `ros2 run` 实际执行的文件完全一致。CLion 会基于工作目录自动解析相对路径，若出现路径红色报错、提示文件不存在，可先通过文件夹图标选择绝对路径，再手动修改为相对路径，不影响最终运行调试效果；也可直接填写绝对路径，适配性略差于相对路径。
+　　Script path 填写工作空间相对路径：`install/py_pkg/lib/py_pkg/py_node`，该路径为 `colcon build` 编译后生成的原生可执行 Python 节点，无 `.py` 后缀，和 `ros2 run` 实际执行的文件完全一致。CLion 会基于工作目录自动解析相对路径，若出现路径红色报错、提示文件不存在，可先通过文件夹图标选择绝对路径，再手动修改为相对路径，不影响最终运行调试效果；也可直接填写绝对路径，适配性略差于相对路径。
 
 　　**解释器与工作目录配置**
 
@@ -323,7 +323,7 @@ env | grep -E "ROS|PYTHONPATH|LD_LIBRARY_PATH|PATH|AMENT" > .env
 
 　　**加载环境变量文件（关键步骤）**
 
-　　点击 Path to \&\#34;\.env\&\#34; files 右侧文件夹图标 → 选择 `Load from file` → 选中第一步生成的根目录 `\.env` 文件。该步骤为调试核心，若不加载 `\.env` 文件，CLion 调试环境缺失 ROS2 核心变量，会导致节点无法启动、无法通信、依赖加载失败等问题。其余配置项保持默认即可，点击`OK` 保存配置。
+　　点击 Paths to .env files 右侧文件夹图标 → 选择 `Load from file` → 选中第一步生成的根目录 `.env` 文件。该步骤为调试核心，若不加载 `.env` 文件，CLion 调试环境缺失 ROS2 核心变量，会导致节点无法启动、无法通信、依赖加载失败等问题。其余配置项保持默认即可，点击`OK` 保存配置。
 
 　　**断点调试验证与使用方法**
 
