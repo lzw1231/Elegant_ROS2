@@ -314,7 +314,7 @@ env | grep -E "ROS|PYTHONPATH|LD_LIBRARY_PATH|PATH|AMENT" > .env
 4\. **Environment variables**：添加如下参数：
 ```text
 PYTHONIOENCODING=utf\-8;RCUTILS\_COLORIZED\_OUTPUT=0
-```text
+```
 
 5\. **关键**：加载项目根目录的\.env文件，其余默认保存。
 
