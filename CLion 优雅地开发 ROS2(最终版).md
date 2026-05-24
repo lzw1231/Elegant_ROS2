@@ -305,13 +305,16 @@ source install/setup.bash
 env | grep -E "ROS|PYTHONPATH|LD_LIBRARY_PATH|PATH|AMENT" > .env
 ```
 
-1\. 新建Python运行配置，命名为 `py\_node`。
+1\. 新建Python运行配置，命名为 `py_node`。
 
-2\. **Script path**：填写编译后节点路径（直接复制使用）：`install/py\_pkg/lib/py\_pkg/py\_node`
+2\. **Script path**：填写编译后节点路径：`install/py_pkg/lib/py_pkg/py_node`
 
-3\. **Working directory**：设置为工程根目录（直接复制使用）：`$ProjectFileDir$`
+3\. **Working directory**：设置为工程根目录：`$ProjectFileDir$`
 
-4\. **Environment variables**：添加如下参数（直接复制使用）：`PYTHONIOENCODING=utf\-8;RCUTILS\_COLORIZED\_OUTPUT=0`
+4\. **Environment variables**：添加如下参数：
+```text
+PYTHONIOENCODING=utf\-8;RCUTILS\_COLORIZED\_OUTPUT=0
+```text
 
 5\. **关键**：加载项目根目录的\.env文件，其余默认保存。
 
